@@ -5,6 +5,6 @@ ps_ram_log - creats ps,top,free output logs
 
 EXAMPLE:<br>
 
-![alt text](https://raw.githubusercontent.com/ruslansvs2/ps_ram/doc/ps_mem_output.JPG)
+![alt text](https://raw.githubusercontent.com/ruslansvs2/ps_ram/main/doc/ps_mem_output.JPG)
 
 
