@@ -1,0 +1,47 @@
+#!/bin/bash
+# prcoess list script
+# crate  process list metrics and put it to the flle
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin/
+
+
+# Path to log files
+Dir="."
+
+#
+prefix_dir=$(date +"%Y-%m-%d")
+prefix_dir_H=$(date +"%H")
+prefix_file_M=$(date +"%M")
+Dir_full=$Dir/$prefix_dir/$prefix_dir_H
+file=$Dir_full/$prefix_file_M
+
+create_dir() {
+    [[ -f $Dir_full ]] || mkdir -p $Dir_full
+}
+
+
+ps_list() {
+    ps_mem -d | grep ^[0-9] >> ${file}_ps
+}
+
+
+top_list() {
+    date >> ${file}_top
+    top -b -o %MEM -n 1 >> ${file}_top
+    echo ${file}_top
+}
+
+free_list() {
+    date >> ${file}_free
+    free -m >> ${file}_free
+}
+
+
+_main() {
+    create_dir
+    ps_list
+    top_list
+    free_list
+}
+
+_main
