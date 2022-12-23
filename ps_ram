@@ -1,6 +1,6 @@
 #!/bin/bash
 # created by ruslansvs@yahoo.com
-# how to use: ./ps_usage_ram.sh file1 file2
+# how to use: ./ps_ram file1 file2
 
 #set -x
 
@@ -29,8 +29,6 @@ create_list() {
     local _i
 
     while read -r priv_mem _ _ shared_mem _ _ mem _ comm pid; do
-	    #echo "RESULT =========="$pid
-	    #exit 0
 	    pid=${pid/[/}
 	    pid=${pid/]/}
             count=0
@@ -77,10 +75,8 @@ list_of_diff_sum_mem() {
          _mem=$( echo ${proc_MEM[$_pid]} | bc ) 
          priv_mem=$( echo ${proc_priv_MEM[$_pid]} | bc ) 
          shared_mem=$( echo ${proc_shared_MEM[$_pid]} | bc ) 
-	# echo $_mem
          if (( ${pid_in_files_count[$_pid]} >= 2 )) && \
             [[ "$_mem" != "0" ]]; then
-#            (( $_mem != 0 )); then
                 printf "%10s %10s %10s %10s %5s\n" $_mem $priv_mem $shared_mem $_pid ${proc_comm[$_pid]}
         fi
     done
@@ -101,7 +97,6 @@ get_output_for_file() {
          shared_mem=$( echo ${proc_shared_MEM[$_pid]} | bc ) 
          if [[ ${proc_files_count[$_pid]} == $2 ]] && \
             [[ "$_mem" != "0" ]]; then
-#            (( ${proc_MEM[$_pid]} != 0 )); then
             printf "%20s %10s %10s %10s %10s\n" $_mem $priv_mem $shared_mem  $_pid ${proc_comm[$_pid]} #${proc_files_count[$_pid]}
             (( _count++ ))
             sum_mem_sum=$( echo "$sum_mem_sum + $_mem" | bc )
