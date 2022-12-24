@@ -76,7 +76,7 @@ list_of_diff_sum_mem() {
          priv_mem=$( echo ${proc_priv_MEM[$_pid]} | bc ) 
          shared_mem=$( echo ${proc_shared_MEM[$_pid]} | bc ) 
          if (( ${pid_in_files_count[$_pid]} >= 2 )) && \
-            [[ "$_mem" != "0" ]]; then
+	    [[ $(echo "$_mem != 0" | bc -l ) -ne 0 ]]; then
                 printf "%10s %10s %10s %10s %5s\n" $_mem $priv_mem $shared_mem $_pid ${proc_comm[$_pid]}
         fi
     done
@@ -96,7 +96,7 @@ get_output_for_file() {
          priv_mem=$( echo ${proc_priv_MEM[$_pid]} | bc ) 
          shared_mem=$( echo ${proc_shared_MEM[$_pid]} | bc ) 
          if [[ ${proc_files_count[$_pid]} == $2 ]] && \
-            [[ "$_mem" != "0" ]]; then
+            [[ $(echo "$_mem != 0" | bc -l) -ne 0 ]]; then
             printf "%20s %10s %10s %10s %10s\n" $_mem $priv_mem $shared_mem  $_pid ${proc_comm[$_pid]} #${proc_files_count[$_pid]}
             (( _count++ ))
             sum_mem_sum=$( echo "$sum_mem_sum + $_mem" | bc )
