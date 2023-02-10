@@ -23,7 +23,7 @@ total 69<br>
 then you can add this script to crontab<br>
 example:<br>
 
-&#9733; &#9733; &#9733; &#9733; &#9733;  root /opt/scripts/perf_log <br>
+\* \* \* \* \*  root /opt/scripts/perf_log <br>
 
 To change the log path please change value of Dir in the perf_log file
 
