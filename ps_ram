@@ -1,0 +1,116 @@
+#!/bin/bash
+# created by ruslansvs@yahoo.com
+# how to use: ./ps_ram file1 file2
+
+#set -x
+
+declare -A proc_MEM
+declare -A proc_priv_MEM
+declare -A proc_shared_MEM
+declare -A proc_comm
+declare -A pid_count
+declare -A pid_in_files_count
+declare -A proc_files_count
+
+file_one=$1
+file_two=$2
+
+
+create_list() {
+    local mem
+    local pid
+    local _mem
+    local priv_mem
+    local shared_mem
+    local rss
+    local comm
+    local count
+    local count_f
+    local _i
+
+    while read -r priv_mem _ _ shared_mem _ _ mem _ comm pid; do
+	    pid=${pid/[/}
+	    pid=${pid/]/}
+            count=0
+            for _mem in ${proc_MEM[$pid]}; do ((count++)); done
+                if (( count >= 1 )); then
+                    proc_MEM[$pid]+=" - "$mem
+                    proc_priv_MEM[$pid]+=" - "$priv_mem
+                    proc_shared_MEM[$pid]+=" - "$shared_mem
+                    (( pid_count[$pid]++ ))
+                    (( pid_in_files_count[$pid]++ ))
+                    proc_files_count[$pid]+=" "$1
+                else
+                   proc_MEM[$pid]+=$mem
+		   proc_priv_MEM[$pid]+=$priv_mem
+                   proc_shared_MEM[$pid]+=$shared_mem
+                   (( pid_count[$pid]++ ))
+                   (( pid_in_files_count[$pid]++ ))
+                   proc_files_count[$pid]+=$1
+                fi
+              proc_comm[$pid]=$comm
+
+   done < $1
+
+}
+
+
+get_arr() {
+    local _pid
+    for _pid in $@; do
+      create_list $1
+    shift
+done
+}
+
+list_of_diff_sum_mem() {
+    local _pid
+    local count
+    local _mem
+    local priv_mem
+    local shared_mem
+    echo -e "\n\nDIFF MEM between the files. MEM file $file_one - MEM file $file_two by process"
+    printf "%10s %10s %10s %10s %5s\n" "DIFF: MEM" "PRIV_MEM" "SHARED_MEM" "PID" "COMMAND"
+    for _pid in ${!proc_MEM[@]}; do
+         _mem=$( echo ${proc_MEM[$_pid]} | bc ) 
+         priv_mem=$( echo ${proc_priv_MEM[$_pid]} | bc ) 
+         shared_mem=$( echo ${proc_shared_MEM[$_pid]} | bc ) 
+         if (( ${pid_in_files_count[$_pid]} >= 2 )) && \
+	    [[ $(echo "$_mem != 0" | bc -l ) -ne 0 ]]; then
+                printf "%10s %10s %10s %10s %5s\n" $_mem $priv_mem $shared_mem $_pid ${proc_comm[$_pid]}
+        fi
+    done
+}
+
+get_output_for_file() {
+     local _pid
+     local _count=0
+     local sum_mem_sum=0
+     local _mem
+     local priv_mem
+     local shared_mem
+     echo -e "\n\nprocesses only in FILE $1: $2"
+     printf "%20s %10s %10s %10s %10s\n" "MEM" "PRIV_MEM" "SHARED_MEM" "PID" "COM"
+     for _pid in ${!proc_MEM[@]}; do
+         _mem=$( echo ${proc_MEM[$_pid]} | bc ) 
+         priv_mem=$( echo ${proc_priv_MEM[$_pid]} | bc ) 
+         shared_mem=$( echo ${proc_shared_MEM[$_pid]} | bc ) 
+         if [[ ${proc_files_count[$_pid]} == $2 ]] && \
+            [[ $(echo "$_mem != 0" | bc -l) -ne 0 ]]; then
+            printf "%20s %10s %10s %10s %10s\n" $_mem $priv_mem $shared_mem  $_pid ${proc_comm[$_pid]} #${proc_files_count[$_pid]}
+            (( _count++ ))
+            sum_mem_sum=$( echo "$sum_mem_sum + $_mem" | bc )
+         fi
+     done
+     echo count processes: $_count
+     echo MEM sum for all processes: $sum_mem_sum
+}
+
+_main() {
+    get_arr $@
+    get_output_for_file 1 $1
+    get_output_for_file 2 $2
+    list_of_diff_sum_mem
+}
+
+_main $@
