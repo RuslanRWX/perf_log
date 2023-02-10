@@ -2,8 +2,7 @@
 
 create cron job and &#9749;<br>
 <br> 
-The script can be used to debug and troubleshoot a performance issue.<br>
-It'll log main performance metriks to text files which can be parsing later.
+The script can be used to debug and troubleshoot a performance issue. It'll log main performance metriks to text files which can be parsing later.
 <br>
 perf_log               - creat and log output of top,ps,pmstat,vmstat and free
 <br>ps_ram             - parsing ps_mem logs for finding RAM diff  
