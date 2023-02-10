@@ -1,0 +1,93 @@
+#!/bin/bash
+
+declare -A proc_RSS
+declare -A proc_comm
+declare -A pid_count
+declare -A pid_in_files_count
+declare -A proc_files_count
+
+file_one=$1
+file_two=$2
+
+
+create_list() {
+    local mem
+    local pid
+    local cpu
+    local vsz
+    local rss
+    local comm
+    local count
+    local count_f
+    local _i
+
+    while read -r mem pid cpu vsz rss comm; do
+            count=0
+            for _rss in ${proc_RSS[$pid]}; do ((count++)); done
+                if (( count >= 1 )); then
+                    proc_RSS[$pid]+=" - "$rss
+                    (( pid_count[$pid]++ ))
+                    (( pid_in_files_count[$pid]++ ))
+                    proc_files_count[$pid]+=" "$1
+                else
+                   proc_RSS[$pid]+=$rss
+                   (( pid_count[$pid]++ ))
+                   (( pid_in_files_count[$pid]++ ))
+                   proc_files_count[$pid]+=$1
+                fi
+                proc_comm[$pid]=$comm
+
+    done < $1
+
+}
+
+
+get_arr() {
+    local _pid
+    for _pid in $@; do
+      create_list $1
+    shift
+done
+}
+
+
+list_of_diff_rss() {
+    local _pid
+    local count
+    echo -e "\n\nDIFF RSS between the files. RSS file $file_one - RSS file $file_two by process"
+    printf "%20s %10s %5s\n" "DIFF RSS" "PID" "COM"
+    for _pid in ${!proc_RSS[@]}; do
+         if (( ${pid_in_files_count[$_pid]} >= 2 )) && \
+            (( ${proc_RSS[$_pid]} != 0 )); then
+            printf "%20s %10s %5s\n" $(( ${proc_RSS[$_pid]} )) $_pid ${proc_comm[$_pid]}
+        fi
+    done
+}
+
+
+get_output_for_file() {
+     local _pid
+     local _count=0
+     local rss_sum=0
+     echo -e "\n\nprocesses only in FILE $1: $2"
+     printf "%20s %10s %10s\n" "RSS" "PID" "COM"
+     for _pid in ${!proc_VSZ[@]}; do
+         if [[ ${proc_files_count[$_pid]} == $2 ]] && \
+            (( ${proc_RSS[$_pid]} != 0 )); then
+            printf "%20s %10s %10s\n" ${proc_RSS[$_pid]} $_pid ${proc_comm[$_pid]} #${proc_files_count[$_pid]}
+            (( _count++ ))
+            rss_sum=$((  rss_sum + ${proc_RSS[$_pid]} ))
+         fi
+     done
+     echo count processes: $_count
+     echo RSS sum for all processes: $rss_sum
+}
+
+_main() {
+    get_arr $@
+    get_output_for_file 1 $1
+    get_output_for_file 2 $2
+    list_of_diff_rss
+}
+
+_main $@
